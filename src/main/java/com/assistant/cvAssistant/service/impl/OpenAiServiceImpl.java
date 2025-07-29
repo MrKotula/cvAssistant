@@ -5,6 +5,8 @@ import com.assistant.cvAssistant.exception.OpenAIApiResponseException;
 import com.assistant.cvAssistant.model.dto.ChatGptMessage;
 import com.assistant.cvAssistant.model.dto.ChatGptRequest;
 import com.assistant.cvAssistant.model.dto.ChatGptResponse;
+import com.assistant.cvAssistant.model.dto.GptMessageRequest;
+import com.assistant.cvAssistant.model.dto.GptMessageResponse;
 import com.assistant.cvAssistant.service.OpenAiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -38,13 +40,13 @@ public class OpenAiServiceImpl implements OpenAiService {
     }
 
     @Override
-    public String sendMessage(String userMessage) {
+    public GptMessageResponse sendMessage(GptMessageRequest gptMessageRequest) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(apiKey);
 
-            ChatGptMessage message = new ChatGptMessage(USER_ROLE, userMessage);
+            ChatGptMessage message = new ChatGptMessage(USER_ROLE, gptMessageRequest.userMessage());
             ChatGptRequest request = new ChatGptRequest(GPT_MODEL, List.of(message));
 
             HttpEntity<ChatGptRequest> entity = new HttpEntity<>(request, headers);
@@ -59,11 +61,11 @@ public class OpenAiServiceImpl implements OpenAiService {
                 throw new OpenAIApiResponseException(GPT_EMPTY_RESPONSE_EXCEPTION);
             }
 
-            return body
+            return new GptMessageResponse(body
                     .choices()
                     .get(GPT_FIRST_ANSWER)
                     .message()
-                    .content();
+                    .content());
 
         }  catch (Exception e) {
             throw new OpenAIApiConnectionException(GPT_CONNECTION_EXCEPTION + e);
